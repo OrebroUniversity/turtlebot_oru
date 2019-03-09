@@ -10,7 +10,7 @@
   <node name="map_server" type="map_server" pkg="map_server"
     args="$(find turtlebot_oru)/maps/peishome.yaml" />
 
-  <group ns="turtlebot$(robot_id)">
+  <group ns="turtlebot$(arg robot_id)">
     <!-- Turtlebot bringup -->
     <include
       file="$(find turtlebot_bringup)/launch/minimal.launch" />
@@ -25,13 +25,13 @@
       <!-- We must specify an absolute topic name because if not it will 
         be prefixed by "$(arg camera)". Probably is a bug in the nodelet manager: 
         https://github.com/ros/nodelet_core/issues/7 -->
-      <arg name="scan_topic" value="/turtlebot$(robot_id)/scan" />
+      <arg name="scan_topic" value="/turtlebot$(arg robot_id)/scan" />
     </include>
 
     <!-- Node 3: MCL -->
     <!-- WARNING: Using default parameters -->
     <node name="mcl" type="amcl" pkg="amcl">
-      <remap from="scan" to="/turtlebot$(robot_id)/scan" />
+      <remap from="scan" to="/turtlebot$(arg robot_id)/scan" />
       <!-- param name="odom_model_type" value="car" / -->
       <param name="initial_pose_x" value="0.0" />
       <param name="initial_pose_y" value="-4.0" />
@@ -45,32 +45,32 @@
       name="move_base" output="screen"
       launch-prefix="$(arg launch_prefix)">
       <rosparam
-        file="$(find smp_ros)/param/costmap_common_params.yaml"
+        file="$(find turtlebot_oru)/param/costmap_common_params.yaml"
         command="load" ns="global_costmap" />
       <rosparam
-        file="$(find smp_ros)/param/costmap_common_params.yaml"
+        file="$(find turtlebot_oru)/param/costmap_common_params.yaml"
         command="load" ns="local_costmap" />
       <rosparam
-        file="$(find smp_ros)/param/local_costmap_params.yaml"
+        file="$(find turtlebot_oru)/param/local_costmap_params.yaml"
         command="load" />
       <rosparam
-        file="$(find smp_ros)/param/global_costmap_params.yaml"
+        file="$(find turtlebot_oru)/param/global_costmap_params.yaml"
         command="load" />
       <rosparam
-        file="$(find smp_ros)/param/move_base_params.yaml"
+        file="$(find turtlebot_oru)/param/move_base_params.yaml"
         command="load" />
-      <rosparam file="$(find smp_ros)/param/teb_params.yaml"
+      <rosparam file="$(find turtlebot_oru)/param/teb_params.yaml"
         command="load" />
 
       <!-- reset frame_id parameters using user input data -->
       <param name="global_costmap/global_frame" value="map" />
       <param name="global_costmap/robot_base_frame"
-        value="turtlebot$(robot_id)/base_link" />
+        value="turtlebot$(arg robot_id)/base_link" />
       <param name="local_costmap/global_frame" value="map" />
       <param name="local_costmap/robot_base_frame"
-        value="turtlebot$(robot_id)/base_link" />
+        value="turtlebot$(arg robot_id)/base_link" />
 
-      <remap from="scan" to="turtlebot$(robot_id)/scan" />
+      <remap from="scan" to="turtlebot$(arg robot_id)/scan" />
     </node>
   </group>
 
