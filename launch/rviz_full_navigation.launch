@@ -1,0 +1,6 @@
+<launch>
+  <!-- Node 4: Rviz -->
+  <node name="rviz" type="rviz" pkg="rviz"
+    args="-d $(find turtlebot_oru)/launch/turtlebot_full_navigation.rviz" />
+
+</launch>
