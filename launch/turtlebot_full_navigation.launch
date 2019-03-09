@@ -11,9 +11,14 @@
     args="$(find turtlebot_oru)/maps/peishome.yaml" />
 
   <group ns="turtlebot$(arg robot_id)">
+    <param name="tf_prefix" value="turtlebot$(arg robot_id)" />
     <!-- Turtlebot bringup -->
+
     <include
       file="$(find turtlebot_bringup)/launch/minimal.launch" />
+
+    <param name="mobile_base/odom_frame" value="turtlebot$(arg robot_id)/odom"/>
+    <param name="mobile_base/base_frame" value="turtlebot$(arg robot_id)/base_footprint"/>
 
     <!-- 3dSensor -->
     <include
