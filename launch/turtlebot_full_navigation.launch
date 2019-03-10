@@ -15,34 +15,66 @@
     <!-- Turtlebot bringup -->
 
     <include
-      file="$(find turtlebot_bringup)/launch/minimal.launch" />
+        file="$(find turtlebot_bringup)/launch/minimal.launch">
+      <arg name="3d_sensor" value="kinect" />
+    </include>
 
     <param name="mobile_base/odom_frame" value="turtlebot$(arg robot_id)/odom"/>
     <param name="mobile_base/base_frame" value="turtlebot$(arg robot_id)/base_footprint"/>
 
     <!-- 3dSensor -->
-    <include
-      file="$(find turtlebot_bringup)/launch/3dsensor.launch">
-      <arg name="rgb_processing" value="false" />
-      <arg name="depth_registration" value="false" />
-      <arg name="depth_processing" value="false" />
+    <!-- include
+         file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+         <arg name="camera" value="kinect" />
+         <arg name="rgb_processing" value="false" />
+         <arg name="depth_registration" value="false" />
+         <arg name="depth_processing" value="false" />
 
-      <!-- We must specify an absolute topic name because if not it will 
-        be prefixed by "$(arg camera)". Probably is a bug in the nodelet manager: 
-        https://github.com/ros/nodelet_core/issues/7 -->
-      <arg name="scan_topic" value="/turtlebot$(arg robot_id)/scan" />
+<arg name="scan_topic" value="/turtlebot$(arg robot_id)/scan" />
+</include -->
+
+    <arg name="num_worker_threads" default="4" />                                                     
+
+    <include file="$(find freenect_launch)/launch/freenect_tf_prefix.launch">
+      <arg name="tf_prefix" value="turtlebot$(arg robot_id)" />
+      <arg name="camera"                          value="camera"/>                             
+      <arg name="publish_tf"                      value="false"/>                         
+      <arg name="depth_registration"              value="false"/>                 
+      <arg name="num_worker_threads"              value="$(arg num_worker_threads)" />                
+      
+      <!-- Processing Modules -->                                                                     
+      <arg name="rgb_processing"                  value="true"/>                     
+      <arg name="ir_processing"                   value="true"/>                      
+      <arg name="depth_processing"                value="true"/>                   
+      <arg name="depth_registered_processing"     value="false"/>        
+
     </include>
+
+    <node pkg="nodelet" type="nodelet" name="depthimage_to_laserscan" args="load depthimage_to_laserscan/DepthImageToLaserScanNodelet camera/camera_nodelet_manager">
+      <!-- Pixel rows to use to generate the laserscan. For each column, the scan will
+           return the minimum value for those pixels centered vertically in the image. -->
+      <param name="scan_height" value="10"/>
+      <param name="output_frame_id" value="turtlebot$(arg robot_id)/camera_depth_frame"/>
+      <param name="range_min" value="0.45"/>
+      <remap from="image" to="camera/depth/image_raw"/>
+      <remap from="camera/image" to="camera/depth/image_raw"/>
+    </node>
 
     <!-- Node 3: MCL -->
     <!-- WARNING: Using default parameters -->
     <node name="mcl" type="amcl" pkg="amcl">
-      <remap from="scan" to="/turtlebot$(arg robot_id)/scan" />
+      <remap from="map" to="/map" />
+      <remap from="static_map" to="/static_map" />
+
+      <param name="odom_frame_id" value="turtlebot$(arg robot_id)/odom" />
+      <param name="base_frame_id" value="turtlebot$(arg robot_id)/base_link" />
+      <param name="map_frame_id" value="/map" />
+      <!-- param name="use_map_topic" value="true" / -->
       <!-- param name="odom_model_type" value="car" / -->
       <param name="initial_pose_x" value="0.0" />
       <param name="initial_pose_y" value="-4.0" />
       <param name="initial_pose_a" value="1.57079" />
     </node>
-
 
     <!-- Node 4: MoveBase -->
 
@@ -64,18 +96,23 @@
       <rosparam
         file="$(find turtlebot_oru)/param/move_base_params.yaml"
         command="load" />
-      <rosparam file="$(find turtlebot_oru)/param/teb_params.yaml"
-        command="load" />
+      <rosparam file="$(find turtlebot_navigation)/param/global_planner_params.yaml" command="load" />
+      <rosparam file="$(find turtlebot_oru)/param/dwa_local_planner_params.yaml"
+                command="load" />
+      <rosparam file="$(find turtlebot_oru)/param/navfn_global_planner_params.yaml" command="load" />
 
       <!-- reset frame_id parameters using user input data -->
-      <param name="global_costmap/global_frame" value="map" />
+      <param name="global_costmap/global_frame" value="/map" />
       <param name="global_costmap/robot_base_frame"
-        value="turtlebot$(arg robot_id)/base_link" />
-      <param name="local_costmap/global_frame" value="map" />
+        value="base_link" />
+      <param name="local_costmap/global_frame" value="/map" />
       <param name="local_costmap/robot_base_frame"
-        value="turtlebot$(arg robot_id)/base_link" />
+             value="base_link" />
+      <param name="DWAPlannerROS/global_frame_id" value="/map"/>
 
-      <remap from="scan" to="turtlebot$(arg robot_id)/scan" />
+      <remap from="cmd_vel" to="cmd_vel_mux/input/navi"/>
+      <remap from="map" to="/map"/>
+
     </node>
   </group>
 
