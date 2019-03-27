@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="robot_id" default="1" />
+  <arg name="js_num" default="1" />
+  
+  <group ns="turtlebot$(arg robot_id)">    
+  
+    <node pkg="teleop_twist_joy" name="teleop" type="teleop_node">
+      <rosparam command="load" file="$(find turtlebot_oru)/param/joystick.yaml" />
+      <remap from="cmd_vel" to="cmd_vel_mux/input/teleop"/>
+    </node>
+  
+    <node pkg="joy" type="joy_node" name="joystick">
+      <param name="dev" value="/dev/input/js$(arg js_num)"/>
+      <param name="deadzone" value="0.3" />
+      <param name="autorepeat_rate" value="20" />
+    </node>	
+    
+  </group>
+</launch>
